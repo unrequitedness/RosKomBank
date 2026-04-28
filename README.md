@@ -1,69 +1,53 @@
 # РосКомБанк
 
-Кросс-платформенный десктоп-клиент демо-онлайн-банка.
+Это проект для сдачи сессии. Демо банковского приложения, можно посмотреть как
+работают вход, регистрация, переводы, кредит, штрафы, налоги, мат. капитал.
 
-Изначально программа была написана как WPF-приложение под Windows. Этот репозиторий — порт на **Avalonia UI 11**, чтобы её можно было запускать нативно под Linux (Arch + GNOME, Wayland/X11), macOS и Windows.
+В репе две версии:
+- **десктоп** (Avalonia, .NET 8) - папка `src/`. С базой SQLite, данные сохраняются.
+- **мобильный** (Avalonia.Android, APK) - папка `mobile/`. Без базы, всё в ОЗУ,
+  при перезапуске сбрасывается.
 
-## Стек
+Можно использовать как:
+- учебный пример если кто то хочет посмотреть как делать UI на Avalonia (десктоп
+  и мобила почти одинаково);
+- стартовый шаблон для своего пет проекта (можно выкинуть лишние разделы и
+  оставить только то что нужно);
+- основу для курсовой / лабы по информатике если препод гоняет.
 
-- **.NET 8** (`Microsoft.NETCore.App` ≥ 8.0)
-- **Avalonia 11.2** (`Avalonia`, `Avalonia.Desktop`, `Avalonia.Themes.Fluent`, `Avalonia.Fonts.Inter`)
-- **Material.Icons.Avalonia 2.1** — замена `MaterialDesignThemes.Wpf`
-- **EF Core 8** + **SQLite** (база `roskombank.db` создаётся рядом с бинарём при первом запуске)
+Тестовый аккаунт (создаётся сам при первом запуске):
+- телефон `79001234567`
+- PIN `1234`
+
+Можно зарегать новый, всё работает.
 
 ## Скриншоты
 
-Окно входа · Главная · Карта · Штрафы:
+Десктоп:
 
 ![login](docs/login.png)
 ![dashboard](docs/dashboard.png)
 ![cards](docs/cards.png)
 ![fines](docs/fines.png)
 
-## Запуск на Arch Linux + GNOME
+## Как запустить десктоп
 
-GNOME подходит и в X11-, и в Wayland-сессии — Avalonia 11 умеет в обе. Эмодзи-иконки в дашборде требуют шрифта с эмодзи (Noto Color Emoji).
+Нужен .NET 8 SDK.
 
-### 1. Установить зависимости
+```sh
+git clone https://github.com/unrequitedness/RosKomBank.git
+cd RosKomBank/src/RosKomBank
+dotnet run -c Release
+```
+
+Под Arch Linux + GNOME ставим зависимости:
 
 ```sh
 sudo pacman -S --needed dotnet-sdk dotnet-runtime aspnet-runtime sqlite \
                         noto-fonts noto-fonts-emoji ttf-dejavu fontconfig
 ```
 
-`dotnet-sdk` нужен только для сборки. Если ты планируешь запускать готовый self-contained бинарь — достаточно `sqlite` и шрифтов (см. ниже про publish).
-
-Проверь версию SDK (нужна ≥ 8.0):
-
-```sh
-dotnet --info
-```
-
-### 2. Склонировать и собрать
-
-```sh
-git clone https://github.com/<твой-юзер>/RosKomBank.git
-cd RosKomBank/src/RosKomBank
-dotnet restore
-dotnet build -c Release
-```
-
-### 3. Запустить из исходников
-
-```sh
-dotnet run -c Release
-```
-
-Тестовый аккаунт (создаётся автоматически при первом запуске):
-
-| Поле     | Значение      |
-|----------|---------------|
-| Телефон  | `79001234567` |
-| PIN      | `1234`        |
-
-### 4. (Опционально) собрать self-contained бинарь
-
-Чтобы получить один исполняемый файл, который можно копировать на любую Arch-машину без установленного .NET:
+Если хочется один бинарь без установленного .NET:
 
 ```sh
 dotnet publish -c Release -r linux-x64 --self-contained true \
@@ -71,73 +55,64 @@ dotnet publish -c Release -r linux-x64 --self-contained true \
 ./bin/Release/net8.0/linux-x64/publish/RosKomBank
 ```
 
-### 5. Запуск под Wayland / X11
+База лежит рядом с бинарём в файле `roskombank.db`. Удалить файл = сброс данных.
 
-Avalonia сама определяет сессию. Если хочешь принудительно X11 в Wayland-сессии GNOME:
+## Как запустить мобильную версию
 
-```sh
-AVALONIA_X11_USE_EGL=1 dotnet run -c Release
-```
-
-Если что-то странно рендерится (например, чёрные углы вместо скруглений) — попробуй отключить аппаратное ускорение:
+Готовый APK можно собрать так (см. `mobile/README.md` для подробностей):
 
 ```sh
-AVALONIA_USE_GPU=0 dotnet run -c Release
+cd mobile/RosKomBank.Mobile
+dotnet publish RosKomBank.Mobile.Android/RosKomBank.Mobile.Android.csproj \
+    -c Release -f net8.0-android \
+    -p:AndroidSdkDirectory=$ANDROID_HOME
 ```
 
-### 6. База данных
+Готовый файл будет в
+`RosKomBank.Mobile.Android/bin/Release/net8.0-android/publish/ru.roskombank.mobile-Signed.apk`.
 
-`roskombank.db` (SQLite) создаётся в текущей рабочей директории при первом запуске. Удалить — пересоздастся с дефолтным пользователем и парой тестовых транзакций/штрафов.
+Установить на телефон через `adb install` или просто открыть APK на телефоне
+(надо разрешить установку из неизвестных источников).
 
-```sh
-rm roskombank.db
-```
+В мобильной версии нет SQLite, всё лежит в оперативке (`static List<>`), при
+закрытии приложения данные пропадают и тестовый юзер пересоздаётся.
 
-## Что портировано
+## Что внутри
 
-- ✓ Окно входа (`LoginWindow`)
-- ✓ Окно регистрации (`RegisterWindow`)
-- ✓ Главное окно (`MainBankWindow`) со всеми 9 разделами:
-  - Главная (Dashboard)
-  - Счёт и карта
-  - Переводы
-  - История
-  - Мат. капитал
-  - Кредиты (с калькулятором аннуитета)
-  - Штрафы
-  - Налоги
-  - Профиль (включая смену PIN)
+Все основные банковские функции:
+- вход и регистрация
+- главный экран с балансом, кредитом, мат. капиталом и налогами
+- счёт и карта (с пополнением)
+- переводы по номеру телефона
+- история операций
+- мат. капитал с заявкой
+- кредиты с калькулятором аннуитета (12, 24, 36, 60 мес)
+- штрафы (можно добавлять и оплачивать)
+- налоги (оплата задолженности)
+- профиль со сменой PIN
 
-## Чем отличается от WPF-оригинала
+## Стек
 
-| WPF                                                   | Avalonia-аналог                                                |
-|-------------------------------------------------------|----------------------------------------------------------------|
-| `System.Windows.*`                                    | `Avalonia.*`                                                   |
-| `MaterialDesignThemes.Wpf.PackIcon` / `PackIconKind`  | `Material.Icons.Avalonia.MaterialIcon` / `MaterialIconKind`    |
-| `PasswordBox` (свойство `Password`)                   | `TextBox { PasswordChar = '●' }` (свойство `Text`)             |
-| `WindowStyle.None` + `AllowsTransparency`             | `SystemDecorations.None` + `TransparencyLevelHint`             |
-| `DragMove()`                                          | `BeginMoveDrag(PointerPressedEventArgs)`                       |
-| `MouseLeftButtonDown` / `MouseEnter` / `MouseLeave`   | `PointerPressed` / `PointerEntered` / `PointerExited`          |
-| `Visibility.Collapsed/Visible`                        | `IsVisible = false/true`                                       |
-| `DropShadowEffect`                                    | `Border.BoxShadow` (нативное в Avalonia 11)                    |
-| `Application.Current.Shutdown()`                      | `IClassicDesktopStyleApplicationLifetime.Shutdown()`           |
-| `LinearGradientBrush(c1, c2, angleDeg)`               | `UiHelpers.Gradient(c1, c2, angleDeg)` (см. `Helpers.cs`)      |
-| `ControlTemplate` + `FrameworkElementFactory` для скругления кнопок | `Button.CornerRadius` (нативное)                  |
-| `MessageBox.Show`                                     | `UiHelpers.ShowInfo` (своё мини-модальное окно)                |
-| `System.Windows.Threading.DispatcherTimer`            | `Avalonia.Threading.DispatcherTimer`                           |
-
-База данных и бизнес-логика (`User`, `Transaction`, `Fine`, `BankContext`) перенесены без изменений — EF Core кросс-платформенный.
+- .NET 8
+- Avalonia 11.2 (UI, кроссплатформенный)
+- Material.Icons.Avalonia 2.1 (иконки)
+- EF Core 8 + SQLite (только в десктопе)
+- Avalonia.Android (для APK)
 
 ## Структура
 
 ```
-src/RosKomBank/
-├─ Program.cs            # entry point + AppBuilder
-├─ App.axaml             # Application + темы (Fluent + MaterialIconStyles)
-├─ App.axaml.cs          # OnFrameworkInitializationCompleted: seed БД, открыть LoginWindow
-├─ Models.cs             # User / Transaction / Fine / BankContext
-├─ Helpers.cs            # UiHelpers: Gradient, Rgb/Argb, Icon, ShowInfo, Shutdown
-├─ LoginWindow.cs
-├─ RegisterWindow.cs
-└─ MainBankWindow.cs     # все 9 разделов
+RosKomBank/
+├── src/RosKomBank/                 # десктоп (.NET 8 + Avalonia + SQLite)
+│   ├── Program.cs
+│   ├── App.axaml(.cs)
+│   ├── Models.cs                   # User / Transaction / Fine / BankContext
+│   ├── Helpers.cs
+│   ├── LoginWindow.cs
+│   ├── RegisterWindow.cs
+│   └── MainBankWindow.cs           # все 9 разделов
+└── mobile/RosKomBank.Mobile/       # мобила (.NET 8 + Avalonia.Android, без БД)
+    ├── RosKomBank.Mobile/          # общий код (модели + UI)
+    ├── RosKomBank.Mobile.Android/  # APK entry point
+    └── RosKomBank.Mobile.Dev/      # десктоп раннер для теста UI без эмулятора
 ```
