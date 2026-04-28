@@ -21,15 +21,6 @@
 
 Можно зарегать новый, всё работает.
 
-## Скриншоты
-
-Десктоп:
-
-![login](docs/login.png)
-![dashboard](docs/dashboard.png)
-![cards](docs/cards.png)
-![fines](docs/fines.png)
-
 ## Как запустить десктоп
 
 Нужен .NET 8 SDK.
