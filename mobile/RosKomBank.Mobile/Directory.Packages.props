@@ -1,0 +1,15 @@
+<Project>
+    <PropertyGroup>
+        <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    </PropertyGroup>
+    <ItemGroup>
+        <PackageVersion Include="Avalonia" Version="11.2.3" />
+        <PackageVersion Include="Avalonia.Themes.Fluent" Version="11.2.3" />
+        <PackageVersion Include="Avalonia.Fonts.Inter" Version="11.2.3" />
+        <PackageVersion Include="Avalonia.Diagnostics" Version="11.2.3" />
+        <PackageVersion Include="Avalonia.Android" Version="11.2.3" />
+        <PackageVersion Include="Avalonia.Desktop" Version="11.2.3" />
+        <PackageVersion Include="Material.Icons.Avalonia" Version="2.1.10" />
+        <PackageVersion Include="Xamarin.AndroidX.Core.SplashScreen" Version="1.0.1.15" />
+    </ItemGroup>
+</Project>
